@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tracking Delivery Order (DO) SITTA UT</title>
+  <!-- SEO Tags -->
+  <meta name="description" content="Pelacakan pengiriman Delivery Order (DO) bahan ajar Universitas Terbuka. Tambah pengiriman baru dan pantau status ekspedisi mahasiswa.">
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Vue.js CDN -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  
+  <script>
+    // Theme Initializer to prevent Flash of Unstyled Theme
+    (function() {
+      const savedTheme = localStorage.getItem('sitta_theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    })();
+  </script>
+</head>
+<body>
+
+  <div id="tracking-app" v-cloak>
+    <!-- macOS Application Window Shell -->
+    <div class="mac-window">
+      <!-- Navigation Bar acting as Window Titlebar -->
+      <nav class="navbar">
+        <div class="navbar-actions">
+          <div class="mac-traffic-lights">
+            <span class="dot red" title="Tutup"></span>
+            <span class="dot yellow" title="Minimalkan"></span>
+            <span class="dot green" title="Maksimalkan"></span>
+          </div>
+          <a href="index.html" class="nav-brand" id="nav-brand-link">
+            <div>
+              <span class="brand-logo-text">SITTA <span>UT</span></span>
+            </div>
+          </a>
+        </div>
+        
+        <ul class="nav-links">
+          <li><a href="index.html" class="nav-link" id="nav-home-btn">Beranda</a></li>
+          <li><a href="stok.html" class="nav-link" id="nav-stok-btn">Stok Bahan Ajar</a></li>
+          <li><a href="tracking.html" class="nav-link active" id="nav-tracking-btn">Tracking DO</a></li>
+        </ul>
+        
+        <button class="theme-toggle" id="theme-toggle-btn" @click="toggleTheme" aria-label="Toggle Theme">🌓</button>
+      </nav>
+
+      <!-- Main Container -->
+      <div class="container">
+        
+        <!-- Page Header -->
+        <header class="page-header" id="tracking-page-header">
+          <div>
+            <h1 class="page-title" id="page-main-title">🚚 Lacak <span>Delivery Order (DO)</span></h1>
+            <p class="page-description">Pantau status pengiriman paket bahan ajar mahasiswa Universitas Terbuka secara real-time.</p>
+          </div>
+        </header>
+
+        <!-- Main Layout Grid -->
+        <div class="grid-2col">
+          
+          <!-- Left Side: DO Tracking List Table -->
+          <main class="left-column">
+            <div class="glass-panel" id="do-table-panel">
+              <h2 class="panel-title">📦 Status Pengiriman Bahan Ajar</h2>
+              
+              <div class="table-wrapper">
+                <table class="custom-table" id="tracking-data-table">
+                  <thead>
+                    <tr>
+                      <th>Nomor DO</th>
+                      <th>NIM & Nama</th>
+                      <th>Ekspedisi</th>
+                      <th>Paket Terpilih</th>
+                      <th>Tanggal Kirim</th>
+                      <th style="text-align: right;">Total Harga</th>
+                      <th style="text-align: center;">Status DO</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <!-- Empty template -->
+                    <tr v-if="trackingList.length === 0">
+                      <td colspan="7" class="text-center" style="color: var(--text-muted); padding: 4rem;">
+                        📭 Belum ada pengiriman Delivery Order terdaftar. Silakan gunakan form untuk membuat DO baru!
+                      </td>
+                    </tr>
+                    
+                    <!-- List Rendering of DO records -->
+                    <tr v-for="doItem in trackingList" :key="doItem.nomorDO" :id="'row-' + doItem.nomorDO">
+                      <td>
+                        <strong style="color: #007AFF; font-weight: 700;" v-text="doItem.nomorDO"></strong>
+                      </td>
+                      <td>
+                        <div style="font-weight: 700;" v-text="doItem.nama"></div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">NIM: {{ doItem.nim }}</div>
+                      </td>
+                      <td v-text="doItem.ekspedisi"></td>
+                      <td>
+                        <div style="font-weight: 500;" v-text="doItem.paketNama"></div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">
+                          Isi: <span v-text="doItem.paketIsi.join(', ')"></span>
+                        </div>
+                      </td>
+                      <td>
+                        <code style="background: rgba(120,120,120,0.1); padding: 2px 6px; border-radius: 4px;" v-text="doItem.tanggalKirim"></code>
+                      </td>
+                      <td style="text-align: right; font-weight: 600;">
+                        Rp {{ formatRupiah(doItem.totalHarga) }}
+                      </td>
+                      <td style="text-align: center;">
+                        <!-- Dynamic DO progress indicators -->
+                        <span v-if="doItem.status === 'Selesai'" class="status-badge safe">
+                          ✅ Selesai
+                        </span>
+                        <span v-else-if="doItem.status === 'Dikirim'" class="status-badge warning">
+                          🚚 Dikirim
+                        </span>
+                        <span v-else class="status-badge info">
+                          ⚙️ Diproses
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </main>
+
+          <!-- Right Side: Create New DO Form -->
+          <aside class="right-column">
+            <div class="glass-panel" id="add-do-panel">
+              <h2 class="panel-title">➕ Buat Delivery Order</h2>
+              
+              <form @submit.prevent="submitDO" id="create-do-form">
+                <!-- Auto-generated DO Number -->
+                <div class="form-group mb-4">
+                  <label for="do-number" class="form-label">Nomor DO (Otomatis)</label>
+                  <input type="text" id="do-number" class="form-control" style="font-weight: 700; color: #007AFF; background: rgba(0, 122, 255, 0.05); border-color: rgba(0, 122, 255, 0.25);" :value="nextDoNumber" readonly>
+                  <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; display: block;">
+                    *Nomor DO di-generate berdasarkan tahun berjalan & urutan sequence.
+                  </span>
+                </div>
+
+                <!-- NIM Input -->
+                <div class="form-group mb-4">
+                  <label for="student-nim" class="form-label">NIM Mahasiswa</label>
+                  <input type="text" id="student-nim" class="form-control" placeholder="Contoh: 043219876" v-model.trim="formData.nim">
+                  <span class="validation-error" v-if="errors.nim">
+                    ❌ {{ errors.nim }}
+                  </span>
+                </div>
+
+                <!-- Nama Input -->
+                <div class="form-group mb-4">
+                  <label for="student-name" class="form-label">Nama Lengkap Mahasiswa</label>
+                  <input type="text" id="student-name" class="form-control" placeholder="Contoh: Budi Santoso" v-model="formData.nama">
+                  <span class="validation-error" v-if="errors.nama">
+                    ❌ {{ errors.nama }}
+                  </span>
+                </div>
+
+                <!-- Ekspedisi Selector -->
+                <div class="form-group mb-4">
+                  <label for="courier-select" class="form-label">Ekspedisi Pengiriman</label>
+                  <select id="courier-select" class="form-select" v-model="formData.ekspedisi">
+                    <option value="">-- Pilih Layanan Ekspedisi --</option>
+                    <option v-for="exp in ekspedisiList" :key="exp.id" :value="exp.nama" v-text="exp.nama"></option>
+                  </select>
+                  <span class="validation-error" v-if="errors.ekspedisi">
+                    ❌ {{ errors.ekspedisi }}
+                  </span>
+                </div>
+
+                <!-- Paket Selector -->
+                <div class="form-group mb-4">
+                  <label for="package-select" class="form-label">Pilih Paket Bahan Ajar</label>
+                  <select id="package-select" class="form-select" v-model="formData.selectedPaketCode">
+                    <option value="">-- Pilih Paket Buku --</option>
+                    <!-- Display Kode Paket & Nama Paket in option -->
+                    <option v-for="pkt in paketBahanAjar" :key="pkt.kode" :value="pkt.kode">
+                      [{{ pkt.kode }}] {{ pkt.nama }}
+                    </option>
+                  </select>
+                  <span class="validation-error" v-if="errors.paket">
+                    ❌ {{ errors.paket }}
+                  </span>
+
+                  <!-- Dependent Package Detail Box (revealed dynamically once a package is selected) -->
+                  <div class="package-detail-box" v-if="selectedPaketObj" id="package-detail-container">
+                    <div class="package-detail-title">
+                      📖 Detail Isi Paket: <span v-text="selectedPaketObj.kode"></span>
+                    </div>
+                    <ul class="package-detail-items">
+                      <li v-for="buku in selectedPaketObj.isi" :key="buku" v-text="buku"></li>
+                    </ul>
+                    <div class="package-detail-price">
+                      <span>Harga Paket:</span>
+                      <span>Rp {{ formatRupiah(selectedPaketObj.harga) }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Tanggal Kirim Selector -->
+                <div class="form-group mb-4">
+                  <label for="shipping-date" class="form-label">Tanggal Kirim</label>
+                  <input type="date" id="shipping-date" class="form-control" v-model="formData.tanggalKirim">
+                  <span class="validation-error" v-if="errors.tanggalKirim">
+                    ❌ {{ errors.tanggalKirim }}
+                  </span>
+                </div>
+
+                <!-- Total Harga (Read-Only automatic mapping) -->
+                <div class="form-group mb-4">
+                  <label for="total-price" class="form-label">Total Harga Pemesanan (Rp)</label>
+                  <input type="text" id="total-price" class="form-control" style="background: rgba(120,120,120,0.05); font-weight: 600;" :value="formattedTotalHarga" readonly>
+                </div>
+
+                <!-- Submit button -->
+                <button type="submit" class="btn btn-primary" style="width: 100%;" id="btn-submit-do">
+                  🚀 Daftarkan Delivery Order
+                </button>
+              </form>
+            </div>
+          </aside>
+
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Animated Success Toast Notification Overlay -->
+    <div class="toast-notification" v-if="successToast" id="tracking-success-toast">
+      <span class="toast-icon">✨</span>
+      <span v-text="successToast"></span>
+    </div>
+    
+    <!-- Floating macOS App Dock Navigation -->
+    <div class="mac-dock-container">
+      <nav class="mac-dock">
+        <a href="index.html" class="mac-dock-item">
+          <span class="mac-dock-icon">🏠</span>
+          <span class="mac-dock-label">Beranda</span>
+          <div class="mac-dock-dot"></div>
+        </a>
+        <a href="stok.html" class="mac-dock-item">
+          <span class="mac-dock-icon">📦</span>
+          <span class="mac-dock-label">Stok Bahan Ajar</span>
+          <div class="mac-dock-dot"></div>
+        </a>
+        <a href="tracking.html" class="mac-dock-item active">
+          <span class="mac-dock-icon">🚚</span>
+          <span class="mac-dock-label">Tracking DO</span>
+          <div class="mac-dock-dot"></div>
+        </a>
+      </nav>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>© 2026 <span>SITTA UT</span> - Sistem Informasi Tiras dan Transaksi Bahan Ajar Universitas Terbuka. All Rights Reserved.</p>
+    </footer>
+  </div>
+
+  <!-- Load Shared Dummy Data -->
+  <script src="dataBahanAjar.js"></script>
+  <!-- Load Vue.js Logic App -->
+  <script src="js/tracking-app.js"></script>
+</body>
+</html>

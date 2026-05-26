@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SITTA UT - Portal Sistem Informasi Transaksi Bahan Ajar</title>
+  <!-- SEO Tags -->
+  <meta name="description" content="Portal pemesanan dan distribusi bahan ajar Universitas Terbuka. Kelola stok dan lacak pengiriman Delivery Order Anda secara real-time.">
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Vue.js CDN -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  
+  <script>
+    // Theme Initializer to prevent Flash of Unstyled Theme
+    (function() {
+      const savedTheme = localStorage.getItem('sitta_theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    })();
+  </script>
+</head>
+<body>
+
+  <div id="portal-app" v-cloak>
+    <!-- macOS Application Window Shell -->
+    <div class="mac-window">
+      <!-- Navigation Bar acting as Window Titlebar -->
+      <nav class="navbar">
+        <div class="navbar-actions">
+          <div class="mac-traffic-lights">
+            <span class="dot red" title="Tutup"></span>
+            <span class="dot yellow" title="Minimalkan"></span>
+            <span class="dot green" title="Maksimalkan"></span>
+          </div>
+          <a href="index.html" class="nav-brand" id="nav-brand-link">
+            <div>
+              <span class="brand-logo-text">SITTA <span>UT</span></span>
+            </div>
+          </a>
+        </div>
+        
+        <ul class="nav-links">
+          <li><a href="index.html" class="nav-link active" id="nav-home-btn">Beranda</a></li>
+          <li><a href="stok.html" class="nav-link" id="nav-stok-btn">Stok Bahan Ajar</a></li>
+          <li><a href="tracking.html" class="nav-link" id="nav-tracking-btn">Tracking DO</a></li>
+        </ul>
+        
+        <button class="theme-toggle" id="theme-toggle-btn" @click="toggleTheme" aria-label="Toggle Theme">🌓</button>
+      </nav>
+
+      <!-- Main Content Container -->
+      <div class="container">
+        
+        <!-- Hero Section -->
+        <section class="hero-section" id="portal-hero">
+          <div class="hero-logo">🎓</div>
+          <h1 class="hero-title" id="main-heading">Sistem Informasi Tiras & Transaksi Bahan Ajar</h1>
+          <p class="hero-subtitle">
+            Selamat datang di portal SITTA Universitas Terbuka. Sistem terpadu untuk kebutuhan manajemen stok gudang dan pelacakan distribusi bahan ajar mahasiswa di seluruh wilayah UT Daerah (UPBJJ).
+          </p>
+        </section>
+
+        <!-- Real-Time Statistics Counters -->
+        <h2 class="panel-title mb-4">📈 Ringkasan Tiras Real-Time</h2>
+        <div class="stats-grid" id="portal-stats-grid">
+          <div class="stat-card total" id="stat-total">
+            <div class="stat-icon">📚</div>
+            <div class="stat-content">
+              <h3>Total Bahan Ajar</h3>
+              <div class="stat-number" v-text="stats.total">0</div>
+            </div>
+          </div>
+          <div class="stat-card safe" id="stat-safe">
+            <div class="stat-icon">✅</div>
+            <div class="stat-content">
+              <h3>Stok Aman</h3>
+              <div class="stat-number" v-text="stats.safe">0</div>
+            </div>
+          </div>
+          <div class="stat-card warning" id="stat-warning">
+            <div class="stat-icon">⚠️</div>
+            <div class="stat-content">
+              <h3>Stok Menipis</h3>
+              <div class="stat-number" v-text="stats.warning">0</div>
+            </div>
+          </div>
+          <div class="stat-card danger" id="stat-danger">
+            <div class="stat-icon">🚨</div>
+            <div class="stat-content">
+              <h3>Stok Kosong</h3>
+              <div class="stat-number" v-text="stats.danger">0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Navigation Cards to Web Pages -->
+        <h2 class="panel-title mb-4 mt-4">🚀 Pilih Modul Aplikasi</h2>
+        <div class="portal-grid" id="portal-cards-container">
+          
+          <!-- Card 1: Stok Bahan Ajar -->
+          <a href="stok.html" class="portal-card" id="card-stok-link">
+            <div class="portal-card-icon">🏬</div>
+            <h2>Stok Bahan Ajar</h2>
+            <p>
+              Kelola data persediaan bahan ajar di seluruh lokasi rak UT Daerah. Dilengkapi fitur filter wilayah, peringatan stok kritis, edit jumlah stok secara cepat, dan penambahan komoditas baru.
+            </p>
+            <span class="btn btn-primary" id="btn-stok-go">Buka Manajemen Stok →</span>
+          </a>
+
+          <!-- Card 2: Tracking Delivery Order -->
+          <a href="tracking.html" class="portal-card" id="card-tracking-link">
+            <div class="portal-card-icon">🚚</div>
+            <h2>Tracking Delivery Order (DO)</h2>
+            <p>
+              Buat dan lacak status pengiriman paket bahan ajar mahasiswa. Dilengkapi dengan generator nomor DO otomatis, detail isi paket terintegrasi, dan kalkulator harga pesanan secara otomatis.
+            </p>
+            <span class="btn btn-primary" id="btn-tracking-go">Buka Lacak Pengiriman →</span>
+          </a>
+
+        </div>
+
+      </div>
+    </div>
+    
+    <!-- Floating macOS App Dock Navigation -->
+    <div class="mac-dock-container">
+      <nav class="mac-dock">
+        <a href="index.html" class="mac-dock-item active">
+          <span class="mac-dock-icon">🏠</span>
+          <span class="mac-dock-label">Beranda</span>
+          <div class="mac-dock-dot"></div>
+        </a>
+        <a href="stok.html" class="mac-dock-item">
+          <span class="mac-dock-icon">📦</span>
+          <span class="mac-dock-label">Stok Bahan Ajar</span>
+          <div class="mac-dock-dot"></div>
+        </a>
+        <a href="tracking.html" class="mac-dock-item">
+          <span class="mac-dock-icon">🚚</span>
+          <span class="mac-dock-label">Tracking DO</span>
+          <div class="mac-dock-dot"></div>
+        </a>
+      </nav>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer" id="portal-footer">
+      <p>© 2026 <span>SITTA UT</span> - Sistem Informasi Tiras dan Transaksi Bahan Ajar Universitas Terbuka. All Rights Reserved.</p>
+    </footer>
+  </div>
+
+  <!-- Load Dummy Data Variables -->
+  <script src="dataBahanAjar.js"></script>
+  
+  <!-- Inline Vue for Portal Landing -->
+  <script>
+    const { createApp } = Vue;
+
+    createApp({
+      data() {
+        return {
+          bahanAjarList: []
+        }
+      },
+      mounted() {
+        // Load data from localStorage if exists, fallback to default
+        const savedData = localStorage.getItem('sitta_bahan_ajar');
+        if (savedData) {
+          try {
+            this.bahanAjarList = JSON.parse(savedData);
+          } catch (e) {
+            this.bahanAjarList = window.defaultBahanAjar || [];
+          }
+        } else {
+          this.bahanAjarList = window.defaultBahanAjar || [];
+        }
+      },
+      computed: {
+        stats() {
+          let safe = 0;
+          let warning = 0;
+          let danger = 0;
+
+          this.bahanAjarList.forEach(item => {
+            if (item.qty === 0) {
+              danger++;
+            } else if (item.qty < item.safety) {
+              warning++;
+            } else {
+              safe++;
+            }
+          });
+
+          return {
+            total: this.bahanAjarList.length,
+            safe,
+            warning,
+            danger
+          }
+        }
+      },
+      methods: {
+        toggleTheme() {
+          const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+          const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+          
+          if (!document.startViewTransition) {
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('sitta_theme', newTheme);
+            return;
+          }
+          
+          document.startViewTransition(() => {
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('sitta_theme', newTheme);
+          });
+        }
+      }
+    }).mount('#portal-app');
+  </script>
+</body>
+</html>

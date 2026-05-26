@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manajemen Stok Bahan Ajar SITTA UT</title>
+  <!-- SEO Tags -->
+  <meta name="description" content="Manajemen stok bahan ajar gudang Universitas Terbuka. Lengkap dengan filter UPBJJ daerah, edit rak, dan pelaporan stok kritis.">
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Vue.js CDN -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  
+  <script>
+    // Theme Initializer to prevent Flash of Unstyled Theme
+    (function() {
+      const savedTheme = localStorage.getItem('sitta_theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    })();
+  </script>
+</head>
+<body>
+
+  <div id="stok-app" v-cloak>
+    <!-- macOS Application Window Shell -->
+    <div class="mac-window">
+      <!-- Navigation Bar acting as Window Titlebar -->
+      <nav class="navbar">
+        <div class="navbar-actions">
+          <div class="mac-traffic-lights">
+            <span class="dot red" title="Tutup"></span>
+            <span class="dot yellow" title="Minimalkan"></span>
+            <span class="dot green" title="Maksimalkan"></span>
+          </div>
+          <a href="index.html" class="nav-brand" id="nav-brand-link">
+            <div>
+              <span class="brand-logo-text">SITTA <span>UT</span></span>
+            </div>
+          </a>
+        </div>
+        
+        <ul class="nav-links">
+          <li><a href="index.html" class="nav-link" id="nav-home-btn">Beranda</a></li>
+          <li><a href="stok.html" class="nav-link active" id="nav-stok-btn">Stok Bahan Ajar</a></li>
+          <li><a href="tracking.html" class="nav-link" id="nav-tracking-btn">Tracking DO</a></li>
+        </ul>
+        
+        <button class="theme-toggle" id="theme-toggle-btn" @click="toggleTheme" aria-label="Toggle Theme">🌓</button>
+      </nav>
+
+      <!-- Main Container -->
+      <div class="container">
+        
+        <!-- Page Header -->
+        <header class="page-header" id="stok-page-header">
+          <div>
+            <h1 class="page-title" id="page-main-title">📦 Manajemen <span>Stok Bahan Ajar</span></h1>
+            <p class="page-description">Pantau stok bahan ajar tiras cetak secara dinamis untuk seluruh wilayah UT Daerah (UPBJJ).</p>
+          </div>
+        </header>
+
+        <!-- Dynamic Statistics Cards Grid -->
+        <section class="stats-grid" id="stok-stats-grid">
+          <div class="stat-card total" id="stat-total-stok">
+            <div class="stat-icon">📚</div>
+            <div class="stat-content">
+              <h3>Total Ragam Buku</h3>
+              <div class="stat-number" v-text="stats.total">0</div>
+            </div>
+          </div>
+          <div class="stat-card safe" id="stat-safe-stok">
+            <div class="stat-icon">✅</div>
+            <div class="stat-content">
+              <h3>Stok Aman</h3>
+              <div class="stat-number" v-text="stats.safe">0</div>
+            </div>
+          </div>
+          <div class="stat-card warning" id="stat-warning-stok">
+            <div class="stat-icon">⚠️</div>
+            <div class="stat-content">
+              <h3>Stok Menipis</h3>
+              <div class="stat-number" v-text="stats.warning">0</div>
+            </div>
+          </div>
+          <div class="stat-card danger" id="stat-danger-stok">
+            <div class="stat-icon">🚨</div>
+            <div class="stat-content">
+              <h3>Stok Kosong</h3>
+              <div class="stat-number" v-text="stats.danger">0</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Main Layout: Table Area & Form Area -->
+        <div class="grid-2col">
+          
+          <!-- Left Side: Filters and Table -->
+          <main class="left-column">
+            
+            <!-- Filters Glass Panel -->
+            <div class="glass-panel mb-4" id="filter-panel">
+              <h2 class="panel-title">🔍 Filter & Urutkan Stok</h2>
+              
+              <div class="filter-dashboard">
+                <!-- Search query -->
+                <div class="form-group">
+                  <label for="search-input" class="form-label">Cari Bahan Ajar</label>
+                  <input type="text" id="search-input" class="form-control" placeholder="Cari Kode / Judul..." v-model.trim="searchQuery">
+                </div>
+
+                <!-- UT-Daerah Select -->
+                <div class="form-group">
+                  <label for="filter-upbjj" class="form-label">UT-Daerah (UPBJJ)</label>
+                  <select id="filter-upbjj" class="form-select" v-model="selectedUpbjj">
+                    <option value="">Semua UT-Daerah</option>
+                    <option v-for="item in upbjjList" :key="item.id" :value="item.nama" v-text="item.nama"></option>
+                  </select>
+                </div>
+
+                <!-- Dependent Category Select (v-if UT-Daerah is selected) -->
+                <div class="form-group" v-if="selectedUpbjj">
+                  <label for="filter-category" class="form-label">Kategori Mata Kuliah</label>
+                  <select id="filter-category" class="form-select" v-model="selectedKategori">
+                    <option value="">Semua Kategori</option>
+                    <option v-for="cat in uniqueKategoriOptions" :key="cat" :value="cat" v-text="cat"></option>
+                  </select>
+                </div>
+
+                <!-- Sort options -->
+                <div class="form-group">
+                  <label for="sort-select" class="form-label">Urutkan Berdasarkan</label>
+                  <select id="sort-select" class="form-select" v-model="sortBy">
+                    <option value="judul">Nama Mata Kuliah (A-Z)</option>
+                    <option value="qty">Jumlah Stok</option>
+                    <option value="harga">Harga Satuan</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Warning stock filters & Reset -->
+              <div class="flex-between mt-4" style="flex-wrap: wrap; gap: 1rem;">
+                <label class="checkbox-group" id="warning-filter-checkbox">
+                  <input type="checkbox" class="custom-checkbox" v-model="showWarningOnly">
+                  <span>⚠️ Hanya Tampilkan Stok Kritis (Menipis & Kosong)</span>
+                </label>
+
+                <button class="btn btn-secondary" @click="resetFilters" id="btn-reset-filters">
+                  🔄 Set Ulang Filter
+                </button>
+              </div>
+            </div>
+
+            <!-- Stock Table Glass Panel -->
+            <div class="glass-panel" id="table-panel">
+              <h2 class="panel-title">📋 Daftar Inventaris Bahan Ajar</h2>
+              
+              <div class="table-wrapper">
+                <table class="custom-table" id="stock-data-table">
+                  <thead>
+                    <tr>
+                      <th>Bahan Ajar (Kode/Judul)</th>
+                      <th>Kategori</th>
+                      <th>UT-Daerah</th>
+                      <th>Rak</th>
+                      <th style="text-align: right;">Stok</th>
+                      <th style="text-align: right;">Safety</th>
+                      <th style="text-align: center;">Status</th>
+                      <th>Catatan</th>
+                      <th style="text-align: center;">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <!-- No items template -->
+                    <tr v-if="filteredBahanAjarList.length === 0">
+                      <td colspan="9" class="text-center" style="color: var(--text-muted); padding: 3rem;">
+                        📭 Tidak ada data bahan ajar yang cocok dengan filter.
+                      </td>
+                    </tr>
+                    
+                    <!-- List Rendering with Vue directives -->
+                    <tr v-for="item in filteredBahanAjarList" :key="item.id" :id="'row-' + item.id">
+                      <td>
+                        <div style="font-weight: 700;" v-text="item.kode"></div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);" v-text="item.judul"></div>
+                      </td>
+                      <td v-text="item.Kategori"></td>
+                      <td v-text="item.upbjj"></td>
+                      <td>
+                        <code style="background: rgba(120,120,120,0.1); padding: 2px 6px; border-radius: 4px;" v-text="item.lokasiRak"></code>
+                      </td>
+                      <td style="text-align: right; font-weight: 600;" v-text="item.qty"></td>
+                      <td style="text-align: right; color: var(--text-muted);" v-text="item.safety"></td>
+                      <td style="text-align: center;">
+                        <!-- Stock status badges using conditional v-if directives -->
+                        <span v-if="item.qty === 0" class="status-badge danger">
+                          🚨 Kosong
+                        </span>
+                        <span v-else-if="item.qty < item.safety" class="status-badge warning">
+                          ⚠️ Menipis
+                        </span>
+                        <span v-else class="status-badge safe">
+                          ✅ Aman
+                        </span>
+                      </td>
+                      <!-- Catatan HTML rendered via directive v-html -->
+                      <td v-html="item.catatanHTML"></td>
+                      <td style="text-align: center;">
+                        <button class="btn btn-primary btn-sm" @click="editStock(item)" :id="'btn-edit-' + item.id">
+                          ✏️ Edit
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </main>
+
+          <!-- Right Side: Small Form to Add Material -->
+          <aside class="right-column">
+            <div class="glass-panel" id="add-form-panel">
+              <h2 class="panel-title">➕ Tambah Bahan Ajar</h2>
+              
+              <form @submit.prevent="addBahanAjar" id="add-bahan-ajar-form">
+                <!-- Kode MK -->
+                <div class="form-group mb-4">
+                  <label for="new-kode" class="form-label">Kode Mata Kuliah</label>
+                  <input type="text" id="new-kode" class="form-control" placeholder="Contoh: MKDU4110" v-model="newBahanAjar.kode">
+                  <span class="validation-error" v-if="errors.kode">
+                    ❌ {{ errors.kode }}
+                  </span>
+                </div>
+
+                <!-- Nama/Judul MK -->
+                <div class="form-group mb-4">
+                  <label for="new-judul" class="form-label">Nama Mata Kuliah</label>
+                  <input type="text" id="new-judul" class="form-control" placeholder="Contoh: Bahasa Indonesia" v-model="newBahanAjar.judul">
+                  <span class="validation-error" v-if="errors.judul">
+                    ❌ {{ errors.judul }}
+                  </span>
+                </div>
+
+                <!-- UT-Daerah Selector -->
+                <div class="form-group mb-4">
+                  <label for="new-upbjj" class="form-label">UT-Daerah (UPBJJ)</label>
+                  <select id="new-upbjj" class="form-select" v-model="newBahanAjar.upbjj">
+                    <option value="">-- Pilih UT-Daerah --</option>
+                    <option v-for="item in upbjjList" :key="item.id" :value="item.nama" v-text="item.nama"></option>
+                  </select>
+                  <span class="validation-error" v-if="errors.upbjj">
+                    ❌ {{ errors.upbjj }}
+                  </span>
+                </div>
+
+                <!-- Kategori Selector (Loads automatically) -->
+                <div class="form-group mb-4">
+                  <label for="new-kategori" class="form-label">Kategori</label>
+                  <select id="new-kategori" class="form-select" v-model="newBahanAjar.Kategori">
+                    <option value="">-- Pilih Kategori --</option>
+                    <option value="Umum">Umum</option>
+                    <option value="Ekonomi">Ekonomi</option>
+                    <option value="Hukum">Hukum</option>
+                    <option value="MIPA">MIPA</option>
+                    <option value="Keguruan">Keguruan</option>
+                    <option value="Sains">Sains</option>
+                    <option value="Sosial">Sosial</option>
+                  </select>
+                  <span class="validation-error" v-if="errors.Kategori">
+                    ❌ {{ errors.Kategori }}
+                  </span>
+                </div>
+
+                <!-- Lokasi Rak -->
+                <div class="form-group mb-4">
+                  <label for="new-rak" class="form-label">Lokasi Rak</label>
+                  <input type="text" id="new-rak" class="form-control" placeholder="Contoh: Rak E-4" v-model="newBahanAjar.lokasiRak">
+                  <span class="validation-error" v-if="errors.lokasiRak">
+                    ❌ {{ errors.lokasiRak }}
+                  </span>
+                </div>
+
+                <!-- Jumlah Qty -->
+                <div class="form-group mb-4">
+                  <label for="new-qty" class="form-label">Jumlah Stok (QTY)</label>
+                  <input type="number" id="new-qty" class="form-control" placeholder="0" min="0" v-model.number="newBahanAjar.qty">
+                  <span class="validation-error" v-if="errors.qty">
+                    ❌ {{ errors.qty }}
+                  </span>
+                </div>
+
+                <!-- Jumlah Safety -->
+                <div class="form-group mb-4">
+                  <label for="new-safety" class="form-label">Jumlah Safety Stock</label>
+                  <input type="number" id="new-safety" class="form-control" placeholder="10" min="0" v-model.number="newBahanAjar.safety">
+                  <span class="validation-error" v-if="errors.safety">
+                    ❌ {{ errors.safety }}
+                  </span>
+                </div>
+
+                <!-- Harga Buku -->
+                <div class="form-group mb-4">
+                  <label for="new-harga" class="form-label">Harga Satuan (Rupiah)</label>
+                  <input type="number" id="new-harga" class="form-control" placeholder="50000" min="0" v-model.number="newBahanAjar.harga">
+                  <span class="validation-error" v-if="errors.harga">
+                    ❌ {{ errors.harga }}
+                  </span>
+                </div>
+
+                <!-- Catatan HTML -->
+                <div class="form-group mb-4">
+                  <label for="new-catatan" class="form-label">Catatan Bahan Ajar (HTML Diizinkan)</label>
+                  <textarea id="new-catatan" class="form-control" rows="3" placeholder="Contoh: <strong>Stok Terbatas</strong>" v-model="newBahanAjar.catatanHTML"></textarea>
+                  <span class="validation-error" v-if="errors.catatanHTML">
+                    ❌ {{ errors.catatanHTML }}
+                  </span>
+                </div>
+
+                <!-- Submit button -->
+                <button type="submit" class="btn btn-primary" style="width: 100%;" id="btn-submit-bahan-ajar">
+                  🚀 Tambahkan Data
+                </button>
+              </form>
+            </div>
+          </aside>
+
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Glass Edit Modal Popup Overlay (v-if editing item) -->
+    <div class="modal-overlay" v-if="editingBahanAjar" @click.self="closeEditModal" id="edit-modal-overlay">
+      <div class="modal-content">
+        <header class="modal-header">
+          <h3 id="modal-header-title">✏️ Edit Stok: {{ editingBahanAjar.kode }}</h3>
+          <button class="modal-close" @click="closeEditModal" id="btn-close-modal">×</button>
+        </header>
+        
+        <div class="modal-body">
+          <div style="margin-bottom: 1.2rem; padding: 12px; background: rgba(120,120,120,0.06); border-radius: 8px; border: 1px solid var(--border-panel);">
+            <div style="font-weight: 700; font-size: 1rem;" v-text="editingBahanAjar.judul"></div>
+            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">
+              Daerah: <span v-text="editingBahanAjar.upbjj"></span> | Kategori: <span v-text="editingBahanAjar.Kategori"></span>
+            </div>
+          </div>
+
+          <!-- Edit Lokasi Rak -->
+          <div class="form-group mb-4">
+            <label for="edit-rak" class="form-label">Lokasi Rak Baru</label>
+            <input type="text" id="edit-rak" class="form-control" v-model="editingBahanAjar.lokasiRak">
+            <span class="validation-error" v-if="modalErrors.lokasiRak">
+              ❌ {{ modalErrors.lokasiRak }}
+            </span>
+          </div>
+
+          <!-- Edit Qty -->
+          <div class="form-group mb-4">
+            <label for="edit-qty" class="form-label">Update Jumlah Stok</label>
+            <input type="number" id="edit-qty" class="form-control" min="0" v-model.number="editingBahanAjar.qty">
+            <span class="validation-error" v-if="modalErrors.qty">
+              ❌ {{ modalErrors.qty }}
+            </span>
+          </div>
+
+          <!-- Edit Safety -->
+          <div class="form-group mb-4">
+            <label for="edit-safety" class="form-label">Update Safety Stock</label>
+            <input type="number" id="edit-safety" class="form-control" min="0" v-model.number="editingBahanAjar.safety">
+            <span class="validation-error" v-if="modalErrors.safety">
+              ❌ {{ modalErrors.safety }}
+            </span>
+          </div>
+
+          <!-- Edit Catatan HTML -->
+          <div class="form-group">
+            <label for="edit-catatan" class="form-label">Update Catatan (HTML Diizinkan)</label>
+            <textarea id="edit-catatan" class="form-control" rows="3" v-model="editingBahanAjar.catatanHTML"></textarea>
+            <span class="validation-error" v-if="modalErrors.catatanHTML">
+              ❌ {{ modalErrors.catatanHTML }}
+            </span>
+          </div>
+        </div>
+
+        <footer class="modal-footer">
+          <button class="btn btn-secondary btn-sm" @click="closeEditModal" id="btn-cancel-edit">Batal</button>
+          <button class="btn btn-primary btn-sm" @click="saveStockUpdate" id="btn-save-edit">Simpan Perubahan</button>
+        </footer>
+      </div>
+    </div>
+
+    <!-- Animated Success Toast Notification Overlay -->
+    <div class="toast-notification" v-if="successToast" id="stok-success-toast">
+      <span class="toast-icon">✨</span>
+      <span v-text="successToast"></span>
+    </div>
+    
+    <!-- Floating macOS App Dock Navigation -->
+    <div class="mac-dock-container">
+      <nav class="mac-dock">
+        <a href="index.html" class="mac-dock-item">
+          <span class="mac-dock-icon">🏠</span>
+          <span class="mac-dock-label">Beranda</span>
+          <div class="mac-dock-dot"></div>
+        </a>
+        <a href="stok.html" class="mac-dock-item active">
+          <span class="mac-dock-icon">📦</span>
+          <span class="mac-dock-label">Stok Bahan Ajar</span>
+          <div class="mac-dock-dot"></div>
+        </a>
+        <a href="tracking.html" class="mac-dock-item">
+          <span class="mac-dock-icon">🚚</span>
+          <span class="mac-dock-label">Tracking DO</span>
+          <div class="mac-dock-dot"></div>
+        </a>
+      </nav>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>© 2026 <span>SITTA UT</span> - Sistem Informasi Tiras dan Transaksi Bahan Ajar Universitas Terbuka. All Rights Reserved.</p>
+    </footer>
+  </div>
+
+  <!-- Load Dummy Data -->
+  <script src="dataBahanAjar.js"></script>
+  <!-- Load Vue.js Logic App -->
+  <script src="js/stok-app.js"></script>
+</body>
+</html>
