@@ -22,6 +22,17 @@
 </head>
 <body>
 
+  <!-- macOS System Bootloader Loading Screen -->
+  <div id="mac-loading-screen" class="mac-loader-overlay">
+    <div class="mac-loader-content">
+      <div class="mac-loader-logo">🎓</div>
+      <div class="mac-loader-bar">
+        <div class="mac-loader-progress"></div>
+      </div>
+      <div class="mac-loader-text">SITTA UT sedang memuat...</div>
+    </div>
+  </div>
+
   <div id="tracking-app" v-cloak>
     <!-- macOS Application Window Shell -->
     <div class="mac-window">
@@ -269,5 +280,17 @@
   <script src="dataBahanAjar.js"></script>
   <!-- Load Vue.js Logic App -->
   <script src="js/tracking-app.js"></script>
+
+  <script>
+    // Hide Loader smoothly once window is loaded
+    window.addEventListener('load', function() {
+      const loader = document.getElementById('mac-loading-screen');
+      if (loader) {
+        setTimeout(() => {
+          loader.classList.add('fade-out');
+        }, 600); // 600ms delay to enjoy the boot loader!
+      }
+    });
+  </script>
 </body>
 </html>

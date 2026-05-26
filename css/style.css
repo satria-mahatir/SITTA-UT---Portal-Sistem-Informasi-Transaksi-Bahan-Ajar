@@ -1327,3 +1327,106 @@ textarea.form-control {
   from { transform: scale(1.02); filter: blur(2px); }
   to { transform: scale(1); filter: blur(0px); }
 }
+
+/* 
+=====================================================
+  macOS SYSTEM BOOTLOADER (PREMIUM LOADING SCREEN)
+=====================================================
+*/
+
+.mac-loader-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #0c0d14; /* Deep space dark loading background */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999; /* Highest depth index */
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+              visibility 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-theme="light"] .mac-loader-overlay {
+  background: #f4f5fa; /* Silver light loading background */
+}
+
+.mac-loader-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  animation: loaderPulse 2.5s infinite ease-in-out;
+}
+
+.mac-loader-logo {
+  font-size: 3.5rem;
+  line-height: 1.1;
+  filter: drop-shadow(0 8px 24px rgba(255, 199, 44, 0.3));
+  user-select: none;
+}
+
+[data-theme="light"] .mac-loader-logo {
+  filter: drop-shadow(0 8px 24px rgba(0, 122, 255, 0.25));
+}
+
+.mac-loader-bar {
+  width: 200px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+  border: 0.5px solid rgba(255, 255, 255, 0.03);
+}
+
+[data-theme="light"] .mac-loader-bar {
+  background: rgba(0, 0, 0, 0.06);
+  border: 0.5px solid rgba(0, 0, 0, 0.02);
+}
+
+.mac-loader-progress {
+  width: 0%;
+  height: 100%;
+  background: linear-gradient(90deg, var(--ut-gold), #FF9500);
+  border-radius: 10px;
+  animation: loaderFill 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+[data-theme="light"] .mac-loader-progress {
+  background: linear-gradient(90deg, #007AFF, #5856D6);
+}
+
+.mac-loader-text {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  user-select: none;
+  opacity: 0.8;
+}
+
+.mac-loader-overlay.fade-out {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+@keyframes loaderFill {
+  0% { width: 0%; }
+  25% { width: 18%; }
+  45% { width: 55%; }
+  75% { width: 88%; }
+  100% { width: 100%; }
+}
+
+@keyframes loaderPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(0.98); }
+}
+
