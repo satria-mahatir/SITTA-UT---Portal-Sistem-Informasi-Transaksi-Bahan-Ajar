@@ -103,13 +103,18 @@ Untuk menjalankan aplikasi:
 
 ---
 
-## 🎓 Tim Pengembang & Tugas Akademik
+## 💼 Informasi Commission & Pengerjaan (Premium Joki Tugas)
+
+Proyek premium ini dikembangkan dan diselesaikan secara khusus sebagai **Jasa Pembuatan Tugas Praktik (Joki Tugas)** untuk memenuhi persyaratan akademis klien:
 
 * **Mata Kuliah**: Praktik Sistem Informasi Terdistribusi / Pemrograman Berbasis Web
-* **Institusi**: Universitas Terbuka
+* **Institusi Klien**: Universitas Terbuka
 * **Semester**: 2 (Tugas Praktik 2)
-* **Pengembang**: Satria Mahatir
-* **Tugas JOKI**
+* **Developer Joki (Penyedia Jasa)**: **Satria Mahatir** (UI/UX Developer & Reactivity Specialist)
+* **Status Pengerjaan**: Selesai 100% (Overhaul total UI macOS Clean 2026, Penyelarasan Reaktivitas Vue 3, Integrasi Bootloader, Transisi Sinematis, Dokumentasi Lengkap, dan Optimasi Mobile Responsif).
+
+> [!NOTE]
+> Proyek ini diserahkan kepada klien dalam kondisi siap pakai, siap didemonstrasikan via rekaman video presentasi, dan siap dikumpulkan langsung ke portal akademik Universitas Terbuka dengan jaminan fungsionalitas penuh.
 
 ---
-*© 2026 SITTA UT - Sistem Informasi Tiras dan Transaksi Bahan Ajar Universitas Terbuka. Hak Cipta Dilindungi. Tugas Joki*
+*© 2026 SITTA UT - Premium Commission Work by Satria Mahatir. All Rights Reserved.*
