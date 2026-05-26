@@ -109,6 +109,7 @@ Untuk menjalankan aplikasi:
 * **Institusi**: Universitas Terbuka
 * **Semester**: 2 (Tugas Praktik 2)
 * **Pengembang**: Satria Mahatir
+* **Tugas JOKI**
 
 ---
-*© 2026 SITTA UT - Sistem Informasi Tiras dan Transaksi Bahan Ajar Universitas Terbuka. Hak Cipta Dilindungi.*
+*© 2026 SITTA UT - Sistem Informasi Tiras dan Transaksi Bahan Ajar Universitas Terbuka. Hak Cipta Dilindungi. Tugas Joki*
